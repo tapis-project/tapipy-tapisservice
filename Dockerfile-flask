@@ -1,0 +1,36 @@
+# image: tapis/flaskbase
+# Base image for building Tapis API services in Python/flask
+from python:3.7
+
+RUN useradd tapis -u 4872
+ADD requirements-flask.txt /home/tapis/common-requirements.txt
+
+RUN pip install -U --no-cache-dir pip && \
+    pip install --no-cache-dir -r /home/tapis/common-requirements.txt
+
+# TODO -- eventually remove this
+RUN apt-get update && apt-get install -y vim
+
+# TODO -- uncomment to install and test a local copy of tapipy
+# copy from the tapipy python package level so that the __init__.py is right below.
+# i.e., cp -r ~/gits/tapipy/tapipy .
+COPY tapipy /usr/local/lib/python3.7/site-packages/tapipy
+RUN chmod -R a+rx /usr/local/lib/python3.7/site-packages/tapipy
+
+# ----Add the common lib (TODO -- eventually this could be a pip install)
+COPY tapisservice /usr/local/lib/python3.7/site-packages/tapisservice
+
+# set default worker class, workers, and threads for gunicorn
+ENV workerCls=gthread
+ENV processes=2
+ENV threads=3
+
+# set the FLASK_APP var to point to the api.py module in the default location
+ENV FLASK_APP service/api.py
+
+WORKDIR /home/tapis
+
+COPY flask_service_entry.sh /home/tapis/entry.sh
+RUN chmod +x /home/tapis/entry.sh
+
+CMD ["./entry.sh"]

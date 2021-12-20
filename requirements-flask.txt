@@ -1,0 +1,18 @@
+flask==1.1.1
+Flask-SQLAlchemy==2.4.0
+flask-migrate==2.5.2
+Flask-RESTful==0.3.7
+# flasgger==0.9.2
+# connexion[swagger-ui]
+alembic==1.0.10
+psycopg2==2.8.2
+requests==2.22.0
+gunicorn==19.9.0
+PyYAML
+jsonschema
+flask-cors
+openapi-core==0.12.0
+pyjwt
+pycrypto==2.6.1
+cryptography
+tapipy
