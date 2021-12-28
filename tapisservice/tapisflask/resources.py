@@ -11,10 +11,9 @@ api.add_resource(ReadyResource, '/v3/tenants/ready')
 api.add_resource(HelloResource, '/v3/tenants/hello')
 
 """
-from common import errors, utils
 from flask_restful import Resource
-
-from common.logs import get_logger
+from tapisservice import errors, utils
+from tapisservice.logs import get_logger
 logger = get_logger(__name__)
 
 
