@@ -48,7 +48,7 @@ def authentication(tenant_cache=tenant_cache, authn_callback=None):
             return
         else:
             raise e
-    resolve_tenant_id_for_request(g, tenant_cache)
+    resolve_tenant_id_for_request(g, request, tenant_cache)
 
 
 def authorization(authz_callback=None):

@@ -274,12 +274,15 @@ def add_headers(request_thread_local, request):
     request_thread_local.x_tapis_user_token_hash = request.headers.get('X-Tapis-User-Token-Hash')
 
 
-def resolve_tenant_id_for_request(request_thread_local, request_base_url, tenant_cache=tenant_cache):
+def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=tenant_cache):
     """
     Resolves the tenant associated with the request and sets it on the request_thread_local.request_tenant_id variable.
     Additionally, sets the request_thread_local.request_tenant_base_url variable in the process. Returns the
     request_tenant_id (string).
     
+    request should be the request object for the incomming request. at a minimum it should have the following:
+      * request.headers - the headers of the request, as a dictionary-like object.
+      * request.base_url - the base URL for the request which should include the domain (e.g., localhost or dev.tapis.io).
     request_base_url should be the base URL on the request object. for example, in the flask framework, it is the
     flask.request.base_url attribute. We assume it includes the protocol ('http://' or 'https://') as well as the port
     (e.g., ':5000') if included in the actual request.
@@ -298,7 +301,7 @@ def resolve_tenant_id_for_request(request_thread_local, request_base_url, tenant
     :return:
     """
     logger.debug("top of resolve_tenant_id_for_request")
-    add_headers(request_thread_local)
+    add_headers(request_thread_local, request)
     # if the x_tapis_tenant header was set, then this must be a request from a service account. in this case, the
     # request_tenant_id will in general not match the tapis/tenant_id claim in the service token.
     if request_thread_local.x_tapis_tenant and request_thread_local.x_tapis_token:
@@ -311,15 +314,15 @@ def resolve_tenant_id_for_request(request_thread_local, request_base_url, tenant
         request_tenant = tenant_cache.get_tenant_config(tenant_id=request_thread_local.request_tenant_id)
         request_thread_local.request_tenant_base_url = request_tenant.base_url
         # todo -- compute and set g.request_site_id
-        return tenant_cache.request_tenant_id
+        return request_thread_local.request_tenant_id
     # in all other cases, the request's tenant_id is based on the base URL of the request:
-    logger.debug(f"computing base_url based on the URL of the request: {request_base_url}")
+    logger.debug(f"computing base_url based on the URL of the request: {request.base_url}")
     # the request_baseurl includes the protocol, port (if present) and contains the url path; examples:
     #  http://localhost:5000/v3/oauth2/tenant;
     #  https://dev.develop.tapis.io/v3/oauth2/tenant
     # in the local development case, the base URL (e.g., localhost:5000...) cannot be used to resolve the tenant id
     # so instead we use the tenant_id claim within the x-tapis-token:
-    if 'http://172.17.0.1:' in request_base_url or 'http://localhost:' in request_base_url:
+    if 'http://172.17.0.1:' in request.base_url or 'http://localhost:' in request.base_url:
         logger.warn("found 172.17.0.1 or localhost in flask_baseurl; we are assuming this is local development!!")
         # some services, such as authenticator, have endpoints that do not receive tokens. in the local development
         # case for these endpoints, we don't have a lot of good options -- we can't use the base URL or the token
@@ -337,7 +340,7 @@ def resolve_tenant_id_for_request(request_thread_local, request_base_url, tenant
         return request_thread_local.request_tenant_id
     # otherwise we are not in the local development case, so use the request's base URL to determine the tenant id
     # and make sure that tenant_id matches the tenant_id claim in the token.
-    request_tenant = tenant_cache.get_tenant_config(url=request_base_url)
+    request_tenant = tenant_cache.get_tenant_config(url=request.base_url)
     request_thread_local.request_tenant_id = request_tenant.tenant_id
     request_thread_local.request_tenant_base_url = request_tenant.base_url
     # todo -- compute and set request_thread_local.request_site_id
@@ -372,7 +375,7 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
     # service tokens have some extra checks:
     if claims.get('tapis/account_type') == 'service':
         request_thread_local.site_id = claims.get('tapis/target_site_id')
-        service_token_checks(claims, tenant_cache)
+        service_token_checks(request_thread_local, claims, tenant_cache)
     # user tokens must *not* set the X-Tapis-Tenant and X-Tapis_user headers
     else:
         try:
