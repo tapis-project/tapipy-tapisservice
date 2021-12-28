@@ -1,13 +1,3 @@
-from functools import partial
-from tapisservice.auth import get_service_tokens, refresh_service_tokens, set_refresh_token, preprocess_service_request
-from tapisservice.config import conf
-from tapisservice.tenants import tenant_cache
-
-from tapisservice.logs import get_logger
-logger = get_logger(__name__)
-
-# use conf to determine what type of framework is being used --
-from tapisservice.config import conf
 
 
 def on_tapis_client_instantiation(client, **kwargs):
@@ -17,6 +7,22 @@ def on_tapis_client_instantiation(client, **kwargs):
     :param kwargs: All arguments passes to the contstructor.
     :return:
     """
+
+    # NOTE: these imports are done within the on_tapis_client_instantiation function intentionally, so that they are only
+    # imported when needed (i.e., when this function is called by tapipy), to reduce the required imports imposed by services
+    # using this library. this helps prevent circular imports in services that need, for example, to import the config object
+    # at initialization. 
+    from functools import partial
+    from tapisservice.auth import get_service_tokens, refresh_service_tokens, set_refresh_token, preprocess_service_request
+    from tapisservice.tenants import tenant_cache
+
+    from tapisservice.logs import get_logger
+    logger = get_logger(__name__)
+
+    # use conf to determine what type of framework is being used --
+    from tapisservice.config import conf
+
+
     logger.debug("inside tapisservice.on_tapis_client_instantiation")
     if kwargs.get('is_tapis_service'):
         client.is_tapis_service = True
