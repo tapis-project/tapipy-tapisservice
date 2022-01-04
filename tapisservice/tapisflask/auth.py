@@ -1,5 +1,7 @@
 from flask import request, g
-from tapisservice.auth import add_headers, validate_request_token, resolve_tenant_id_for_request
+from tapisservice.auth import add_headers as core_add_headers
+from tapisservice.auth import validate_request_token as core_validate_request_token
+from tapisservice.auth import resolve_tenant_id_for_request as core_resolve_tenant_id_for_request
 from tapisservice.tenants import tenant_cache
 from tapisservice import errors
 
@@ -39,16 +41,16 @@ def authentication(tenant_cache=tenant_cache, authn_callback=None):
         auth.authentication()
 
     """
-    add_headers(g, request)
+    core_add_headers(g, request)
     try:
-        validate_request_token(g, tenant_cache)
+        core_validate_request_token(g, tenant_cache)
     except errors.NoTokenError as e:
         if authn_callback:
             authn_callback()
             return
         else:
             raise e
-    resolve_tenant_id_for_request(g, request, tenant_cache)
+    core_resolve_tenant_id_for_request(g, request, tenant_cache)
 
 
 def authorization(authz_callback=None):
@@ -68,3 +70,28 @@ def authorization(authz_callback=None):
 
     if authz_callback:
         authz_callback()
+
+
+def resolve_tenant_id_for_request(tenants=tenant_cache):
+    """
+    Convenience wrapper around the tapisservice.auth.resolve_tenant_id_for_request() that passes
+    the flask objects.
+    """
+    return core_resolve_tenant_id_for_request(g, request, tenant_cache=tenants)
+
+
+def add_headers():
+    """
+    Convenience wrapper around the tapisservice.auth.add_headers() that passes
+    the flask objects.
+    """
+    return core_add_headers(g, request)
+
+
+def validate_request_token(tenants=tenant_cache):
+    """
+    Convenience wrapper around the tapisservice.auth.validate_request_token() that passes
+    the flask objects.
+    """
+    return core_validate_request_token(g, request, tenant_cache=tenants)
+
