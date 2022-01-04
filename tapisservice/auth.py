@@ -193,11 +193,11 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                 raise errors.BaseTapisError(msg)
 
             # always use x_tapis_user, if set:
-            if hasattr(request_thread_local, 'x_tapis_user'):
+            if hasattr(request_thread_local, 'x_tapis_user') and request_thread_local.x_tapis_user:
                 request_x_tapis_user = request_thread_local.x_tapis_user
             # if x_tapis_user was not set, then we look for the `username` attr on the request_thread_local. this attr 
             # gets set based on the access token.
-            elif hasattr(request_thread_local, 'username'):
+            elif hasattr(request_thread_local, 'username') and request_thread_local.username:
                 request_x_tapis_user = request_thread_local.username
             # finally, if we don't have an x_tapis_user header OR a token, we look for a kwarg _x_tapis_user
             elif '_x_tapis_user' in kwargs.keys():
