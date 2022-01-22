@@ -15,8 +15,8 @@
     },
     "service_password": {
       "type": "string",
-      "description": "The password for the service; used when calling the Tokens API to generate a service token.",
-      "default": "5kY6WyiGMaY0ev0tqda2YKefTom"
+      "description": "The password for the service; used when calling the Tokens API to generate a service token. NOTE: not all services have a service password (e.g., Tokens does not) so it is not a required properyy.",
+      "default": "foobar"
     },
     "log_level": {
       "type": "string",
@@ -51,17 +51,14 @@
     },
     "primary_site_admin_tenant_base_url": {
       "type": "string",
-      "default": "https://admin.develop.tapis.io",
       "description": "Base URL for the admin tenant of the primary site for this Tapis installation. This URL will be used at service initiailization, for retrieving sites and tenants data."
     },
     "service_site_id": {
       "type": "string",
-      "default": "tacc",
       "description": "The site_id for the site where this service runs."
     },
     "service_tenant_id": {
       "type": "string",
-      "default": "admin",
       "description": "The tenant_id for the tenant where this service lives."
     },
     "tenants": {
@@ -136,5 +133,5 @@
       "description": "Location of specific module log file. If not used, global log file will be used."
     }
   },
-  "required": ["service_name", "tenants"]
+  "required": ["service_name", "python_framework_type", "primary_site_admin_tenant_base_url", "service_site_id", "service_tenant_id", "tenants"]
 }
