@@ -1,4 +1,4 @@
-from logging import error
+from lib2to3.pgen2 import token
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 import datetime
@@ -19,7 +19,8 @@ def get_service_tapis_client(tenant_id=None,
                              resource_set='tapipy', #todo -- change back to resource_set='tapipy'
                              custom_spec_dict=None,
                              download_latest_specs=False,
-                             tenants=None):
+                             tenants=None,
+                             access_token_ttl=None):
     """
     Returns a Tapis client for the service using the service's configuration. If tenant_id is not passed, uses the first
     tenant in the service's tenants configuration.
@@ -52,7 +53,10 @@ def get_service_tapis_client(tenant_id=None,
               is_tapis_service=True)
     if not jwt:
         logger.debug("tapis service client constructed, now getting tokens.")
-        t.get_tokens()
+        if access_token_ttl:
+            t.get_tokens(access_token_ttl=access_token_ttl)
+        else:
+            t.get_tokens()
     logger.debug("got tokens, returning tapipy client.")
     return t
 
@@ -103,12 +107,13 @@ def get_service_tokens(self, **kwargs):
                                               target_site_id=target_site_id,
                                               _tapis_set_x_headers_from_service=True)
         except Exception as e:
-            raise errors.BaseTapisError(f"Could not generate service tokens for service: {username}; "
-                                           f"exception: {e};"
-                                           f"function args:"
-                                           f"token_username: {self.username}; "
-                                           f"account_type: {self.account_type}; "
-                                           f"target_site_id: {target_site_id}; ")
+            raise errors.BaseTapisError(f"Could not generate service tokens for service: {username};\n"
+                                           f"exception: {e};\n"
+                                           f"function args:\n"
+                                           f"token_username: {self.username};\n "
+                                           f"account_type: {self.account_type};\n "
+                                           f"target_site_id: {target_site_id};\n "
+                                           f"request url: {e.request.url};")
         self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
                                           'refresh_token': tokens.refresh_token}
 
@@ -118,9 +123,10 @@ def refresh_service_tokens(self, tenant_id):
     Use the refresh token operation for tokens of type "service".
     """
     refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
-    tokens = self.tokens.refresh_token(refresh_token=refresh_token)
+    tokens = self.tokens.refresh_token(refresh_token=refresh_token, _tapis_set_x_headers_from_service=True)
     self.service_tokens[tenant_id]['access_token'] = self.add_claims_to_token(tokens.access_token)
     self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
+    return tokens.access_token
 
 
 def set_refresh_token(self, token):
@@ -191,7 +197,6 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                 "outside of the request context. Consider setting _tapis_set_x_headers_from_service or set the "\
                     "_x_tapis_tenant and _x_tapis_user parameters."
                 raise errors.BaseTapisError(msg)
-
             # always use x_tapis_user, if set:
             if hasattr(request_thread_local, 'x_tapis_user') and request_thread_local.x_tapis_user:
                 request_x_tapis_user = request_thread_local.x_tapis_user
@@ -239,14 +244,30 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     if request_site_admin_tenant_id in operation.tapis_client.service_tokens.keys() \
             and 'access_token' in operation.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
         try:
-            access_token = operation.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token'].access_token
+            access_token = operation.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token']
+            jwt_str = access_token.access_token
             # todo -- check to see if we need to refresh
-            prepared_request.headers['X-Tapis-Token']= access_token
+            prepared_request.headers['X-Tapis-Token']= jwt_str
         except (KeyError, TypeError):
             raise errors.BaseTapisError(f"Did not find service tokens for "
                                         f"tenant {request_site_admin_tenant_id};")
-
-
+        # check if the token has expired or is about to expire and refresh if necessary ---
+        # check the time remaining on the access token
+        try:
+            time_remaining = access_token.expires_in()
+            # if the access token is about to expire, try to use refresh, unless this is a call to
+                # refresh (otherwise this would never terminate!)
+            if datetime.timedelta(seconds=5) > time_remaining:
+                if (operation.resource_name == 'tokens' and operation.operation_id == 'refresh_token')\
+                        or (operation.resource_name == 'authenticator' and operation.operation_id == 'create_token'):
+                    pass
+                else:
+                    access_token = operation.tapis_client.refresh_service_tokens(tenant_id=request_site_admin_tenant_id)
+                    prepared_request.headers['X-Tapis-Token']= access_token.access_token
+        except Exception as e:
+            # if we couldn't refresh the token for whatever reason, we will still try the requst...
+            logger.error(f"Got an exception trying to refresh the service token; will proceed with trying the request. exception: {e}")
+            
 
 def add_headers(request_thread_local, request):
     """
