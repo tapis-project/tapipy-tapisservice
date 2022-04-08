@@ -113,7 +113,8 @@ def get_service_tokens(self, **kwargs):
                                            f"token_username: {self.username};\n "
                                            f"account_type: {self.account_type};\n "
                                            f"target_site_id: {target_site_id};\n "
-                                           f"request url: {e.request.url};")
+                                           f"request url: {e.request.url}; \n "
+                                           f"headers: {e.request.headers}")
         self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
                                           'refresh_token': tokens.refresh_token}
 
@@ -188,6 +189,7 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     # finally, we look for a request object in the request_thread_local that could have these 
     else:
         if conf.python_framework_type == 'flask':
+            logger.debug("looking on the flask thread local to determine the X-Tapis-* headers ")
             
             from tapisservice.tapisflask import request_thread_local
             try:
@@ -246,13 +248,15 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
         try:
             access_token = operation.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token']
             jwt_str = access_token.access_token
-            # todo -- check to see if we need to refresh
             prepared_request.headers['X-Tapis-Token']= jwt_str
+            # also remove the basic auth header; we shouldn't send both
+            prepared_request.headers.pop('Authorization', None)
         except (KeyError, TypeError):
             raise errors.BaseTapisError(f"Did not find service tokens for "
                                         f"tenant {request_site_admin_tenant_id};")
         # check if the token has expired or is about to expire and refresh if necessary ---
         # check the time remaining on the access token
+        logger.debug("checking to see if we need to refresh the service token...")
         try:
             time_remaining = access_token.expires_in()
             # if the access token is about to expire, try to use refresh, unless this is a call to
@@ -262,11 +266,16 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                         or (operation.resource_name == 'authenticator' and operation.operation_id == 'create_token'):
                     pass
                 else:
+                    logger.info("service tokens expired, attempting to refresh service tokens.")
                     access_token = operation.tapis_client.refresh_service_tokens(tenant_id=request_site_admin_tenant_id)
+                    logger.info("service tokens refreshed sucessfully.")
                     prepared_request.headers['X-Tapis-Token']= access_token.access_token
+                    # also remove the basic auth header; we shouldn't send both
+                    prepared_request.headers.pop('Authorization', None)
         except Exception as e:
             # if we couldn't refresh the token for whatever reason, we will still try the requst...
             logger.error(f"Got an exception trying to refresh the service token; will proceed with trying the request. exception: {e}")
+    logger.debug("returning from preprocess_service_request")
             
 
 def add_headers(request_thread_local, request):
@@ -325,11 +334,16 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     add_headers(request_thread_local, request)
     # if the x_tapis_tenant header was set, then this must be a request from a service account. in this case, the
     # request_tenant_id will in general not match the tapis/tenant_id claim in the service token.
-    if request_thread_local.x_tapis_tenant and request_thread_local.x_tapis_token:
-        logger.debug("found x_tapis_tenant and x_tapis_token on the request_thread_local object.")
-        # need to check token is a service token
-        if not request_thread_local.token_claims.get('tapis/account_type') == 'service':
-            raise errors.PermissionsError('Setting X-Tapis-Tenant header and X-Tapis-Token requires a service token.')
+    if request_thread_local.x_tapis_tenant:
+        # if a token was also set, we need to do additional checks
+        if request_thread_local.x_tapis_token:
+            logger.debug("found x_tapis_tenant and x_tapis_token on the request_thread_local object.")
+            # need to check token is a service token
+            if not hasattr(request_thread_local, 'token_claims'):
+                logger.error(f"Did not find token_claims attribute on request_thread_local; attrs: {dir(request_thread_local)}")
+            if not request_thread_local.token_claims.get('tapis/account_type') == 'service':
+                raise errors.PermissionsError('Setting X-Tapis-Tenant header and X-Tapis-Token requires a service token.')
+        
         # validation has passed, so set the request tenant_id to the x_tapis_tenant:
         request_thread_local.request_tenant_id = request_thread_local.x_tapis_tenant
         request_tenant = tenant_cache.get_tenant_config(tenant_id=request_thread_local.request_tenant_id)
@@ -368,10 +382,13 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     # we need to check that the request's tenant_id matches the tenant_id in the token:
     if request_thread_local.x_tapis_token:
         logger.debug("found x_tapis_token on g; making sure tenant claim inside token matches that of the base URL.")
+        if not hasattr(request_thread_local, "token_claims"):
+            logger.error(f"request_thread_local missing token_claims! attrs: {dir(request_thread_local)}")
         token_tenant_id = request_thread_local.token_claims.get('tapis/tenant_id')
         if not token_tenant_id == request_thread_local.request_tenant_id:
             raise errors.PermissionsError(f'The tenant_id claim in the token, '
                                           f'{token_tenant_id} does not match the URL tenant, {request_thread_local.request_tenant_id}.')
+    logger.debug(f"resolve_tenant_id_for_request returning {request_thread_local.request_tenant_id}")
     return request_thread_local.request_tenant_id
 
 
@@ -384,10 +401,13 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
     :param tenants: The service's tenants object.
     :return:
     """
+    logger.debug(f"top of validate_request_token; thread_local attrs: {dir(request_thread_local)}")
     if not hasattr(request_thread_local, 'x_tapis_token'):
         raise errors.NoTokenError("No access token found in the request.")
     claims = validate_token(request_thread_local.x_tapis_token, tenant_cache)
     # set basic variables on the flask thread-local
+    if not hasattr(request_thread_local, "token_claims"):
+        logger.error(f"request_thread_local missing token_claims! attrs: {dir(request_thread_local)}")
     request_thread_local.token_claims = claims
     request_thread_local.username = claims.get('tapis/username')
     request_thread_local.tenant_id = claims.get('tapis/tenant_id')
