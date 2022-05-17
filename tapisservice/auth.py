@@ -1,4 +1,5 @@
 from lib2to3.pgen2 import token
+import re
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 import datetime
@@ -20,7 +21,8 @@ def get_service_tapis_client(tenant_id=None,
                              custom_spec_dict=None,
                              download_latest_specs=False,
                              tenants=None,
-                             access_token_ttl=None):
+                             access_token_ttl=None,
+                             generate_tokens=True):
     """
     Returns a Tapis client for the service using the service's configuration. If tenant_id is not passed, uses the first
     tenant in the service's tenants configuration.
@@ -51,7 +53,7 @@ def get_service_tapis_client(tenant_id=None,
               tenants=tenants,
               plugins=["tapisservice"],
               is_tapis_service=True)
-    if not jwt:
+    if generate_tokens:
         logger.debug("tapis service client constructed, now getting tokens.")
         if access_token_ttl:
             t.get_tokens(access_token_ttl=access_token_ttl)
@@ -165,8 +167,9 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     2. It sets the X-Tapis-Token header to the appropriate service token.
     3. It sets the X-Tapis-Tenant and X-Tapis-User headers.
     """
+    logger.debug(f"top of preprocess_service_request for operation: {operation.http_method.upper()}: {operation.op_desc.path_name}")
     # for service requests, we must determine which site to use for the request. there are 3 cases.
-    # first, the caller can explicitly set the _tapis_set_x_headers_from_service variable. this insturcts the library
+    # first, the caller can explicitly set the _tapis_set_x_headers_from_service variable. this instructs the library
     # to use the service's site and name for setting the X-Tapis-Tenant and User headers when making the request.
     if '_tapis_set_x_headers_from_service' in kwargs and kwargs['_tapis_set_x_headers_from_service']:
         # in this case, we assume the tenant for the request is the admin tenant of the site the service belongs to.
@@ -229,18 +232,20 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     # the original base URL is the URL up to the '/v3/'
     orig_base_url = prepared_request.url.split('/v3')[0]
     prepared_request.url = prepared_request.url.replace(orig_base_url, base_url)
+    logger.debug(f"final URL: {prepared_request.url}")
 
     # modify the X-Tapis-Tenant and X-Tapis-User request headers ---
     prepared_request.headers['X-Tapis-Tenant'] = request_tenant_id
     prepared_request.headers['X-Tapis-User'] = request_x_tapis_user
 
-    # set the X-Tapis-Token header
+    # set the X-Tapis-Token header -----
     # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
     # service tokens are stored by admin tenant, so we need to get the admin tenant for the
     # owning site of the tenant.
     for tn in operation.tapis_client.tenant_cache.tenants:
         if tn.site.site_id == site_id:
             request_site_admin_tenant_id = tn.site.site_admin_tenant_id
+    logger.debug(f"site admin tenant for the request: {request_site_admin_tenant_id}")
     # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
     # the service's first set of tokens.
     if request_site_admin_tenant_id in operation.tapis_client.service_tokens.keys() \
@@ -254,8 +259,18 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
         except (KeyError, TypeError):
             raise errors.BaseTapisError(f"Did not find service tokens for "
                                         f"tenant {request_site_admin_tenant_id};")
-        # check if the token has expired or is about to expire and refresh if necessary ---
-        # check the time remaining on the access token
+        
+        # The remaining code is to check whether the token has expired and refresh if necessary
+        # if the access token doesn't have an expires_in attribute, there isn't much we can do.
+        if not hasattr(access_token, "expires_in"):
+            # it is expected that some tokens, including tokens created by and for the Tokens API itself, will be raw
+            # string types
+            if not type(access_token) == str:
+                logger.warn(f"The access token didn't have an expired_in attr and was not a string type.")
+            logger.debug("returning from preprocess_service_request")
+            return
+        # check the time remaining on the access token ---        
+        
         logger.debug("checking to see if we need to refresh the service token...")
         try:
             time_remaining = access_token.expires_in()
@@ -273,8 +288,14 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                     # also remove the basic auth header; we shouldn't send both
                     prepared_request.headers.pop('Authorization', None)
         except Exception as e:
-            # if we couldn't refresh the token for whatever reason, we will still try the requst...
+            # if we couldn't refresh the token for whatever reason, we will still try the request...
             logger.error(f"Got an exception trying to refresh the service token; will proceed with trying the request. exception: {e}")
+    else:
+        # not having a token is not an issue if this is a request to generate a token --
+        if '/v3/tokens' not in prepared_request.url:
+            logger.warning(f"Not able to set the access token; service token keys: {operation.tapis_client.service_tokens.keys()}")
+            if request_site_admin_tenant_id in operation.tapis_client.service_tokens.keys():
+                logger.warning(f"key existed; value: {operation.tapis_client.service_tokens[request_site_admin_tenant_id]}")
     logger.debug("returning from preprocess_service_request")
             
 
