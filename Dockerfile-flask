@@ -24,6 +24,7 @@ COPY tapisservice /usr/local/lib/python3.7/site-packages/tapisservice
 ENV workerCls=gthread
 ENV processes=2
 ENV threads=3
+ENV timeoutSeconds=60
 
 # set the FLASK_APP var to point to the api.py module in the default location
 ENV FLASK_APP service/api.py
