@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.1 - 2022-05-20
+Simplified dependencies, now works with Python 3.10.
+Simplified Dockerfile-tests.
+
 ## 1.2.0 - 2022-05-19
 Added fastapi functionality.
 Added templates for fastapi base image.

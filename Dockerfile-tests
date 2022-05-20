@@ -9,13 +9,13 @@
 
 from python:3.7
 
+# Upgrade pip
+RUN python -m pip install --upgrade pip
+
 # Moving files
 ADD tests/tapisservice-tests.py /home/tapis/tapisservice-tests.py
 ADD tests/configschema.json /home/tapis/configschema.json
 ADD tests/config-dev-develop.json /home/tapis/config.json
-
-# Install tapipy. We'll install tapisservice over this.
-RUN pip3 install tapipy
 
 # Add tapisservice files and build with Poetry build.
 ADD . /home/tapis/tapisservice-install-dir
