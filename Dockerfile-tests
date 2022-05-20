@@ -1,0 +1,30 @@
+# Image: tapis/tapisservice-tests-tests
+# Build: docker build -t tapis/tapisservice-tests-tests -f Dockerfile-tests .
+# Run it:
+#    docker run -it --rm tapis/tapisservice-tests-tests
+# Try it:
+#    docker run -it --rm tapis/tapisservice-tests bash
+#    docker run -it --rm -v $(pwd)/test/resource_examples:/home/tapis/resource_examples tapis/tapisservice-tests bash
+#    docker run -it --network tenants-api_tenants --rm tapis/tapisservice-tests bash
+
+from python:3.7
+
+# Moving files
+ADD tests/tapisservice-tests.py /home/tapis/tapisservice-tests.py
+ADD tests/configschema.json /home/tapis/configschema.json
+ADD tests/config-dev-develop.json /home/tapis/config.json
+
+# Install tapipy. We'll install tapisservice over this.
+RUN pip3 install tapipy
+
+# Add tapisservice files and build with Poetry build.
+ADD . /home/tapis/tapisservice-install-dir
+RUN pip install -r /home/tapis/tapisservice-install-dir/requirements-fastapi.txt
+WORKDIR /home/tapis/tapisservice-install-dir
+RUN poetry build
+WORKDIR /home/tapis/tapisservice-install-dir/dist
+RUN pip install *.whl
+WORKDIR /home/tapis
+
+# Testing
+ENTRYPOINT ["pytest", "--verbose", "/home/tapis/tapisservice-tests.py"]

@@ -1,0 +1,18 @@
+# image: tapis/flaskbase:fastapi
+# Base image for building Tapis API services in Python/flask
+FROM python:3.10
+
+RUN useradd tapis -u 4872
+ADD requirements-fastapi.txt /home/tapis/tapisservice-requirements.txt
+
+# TODO -- eventually remove this
+RUN apt-get update && apt-get install -y vim
+
+# Install requirements and tapipy/tapisservice packages.
+RUN pip install -U --no-cache-dir pip && \
+    pip install --no-cache-dir -r /home/tapis/tapisservice-requirements.txt \
+    pip install tapipy tapisservice==1.2.0
+
+WORKDIR /home/tapis
+
+CMD ["echo", "This is a base image only"]
