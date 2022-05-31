@@ -21,7 +21,9 @@ build-flask:
 build-test:
 	docker build -t tapis/tapisservice-tests -f Dockerfile-tests .
 
-test: build-flask build-test
+run-tests:
 	docker run $$interactive --rm  tapis/tapisservice-tests
+
+test: build-flask build-test run-tests
 
 docker-only: build-flask test-only
