@@ -95,6 +95,7 @@ def get_service_tokens(self, **kwargs):
     else:
         refresh_token_ttl = kwargs['refresh_token_ttl']
     for tenant_id in self.service_tokens.keys():
+        logger.debug(f"attempting to generate token for tenant {tenant_id}")
         try:
             target_site_id = self.tenant_cache.get_tenant_config(tenant_id=tenant_id).site_id
         except Exception as e:
@@ -117,6 +118,7 @@ def get_service_tokens(self, **kwargs):
                                            f"target_site_id: {target_site_id};\n "
                                            f"request url: {e.request.url}; \n "
                                            f"headers: {e.request.headers}")
+        logger.debug(f"generate token for tenant {tenant_id} successfully.")
         self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
                                           'refresh_token': tokens.refresh_token}
 

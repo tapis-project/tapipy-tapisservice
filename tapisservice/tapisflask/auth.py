@@ -93,5 +93,5 @@ def validate_request_token(tenants=tenant_cache):
     Convenience wrapper around the tapisservice.auth.validate_request_token() that passes
     the flask objects.
     """
-    return core_validate_request_token(g, request, tenant_cache=tenants)
+    return core_validate_request_token(g, tenant_cache=tenants)
 
