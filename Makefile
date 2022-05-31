@@ -10,6 +10,7 @@ endif
 build:	
 	rm -rf dist
 	poetry build
+	docker build -t tapis/flaskbase -f Dockerfile-flask .
 
 install: build
 	pip3 uninstall tapisservice -y
