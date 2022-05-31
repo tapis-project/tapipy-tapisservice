@@ -18,3 +18,6 @@ install: build
 test: build
 	docker build -t tapis/tapisservice-tests -f Dockerfile-tests .
 	docker run $$interactive --rm  tapis/tapisservice-tests
+
+test-only:
+	docker run $$interactive --rm  tapis/tapisservice-tests
