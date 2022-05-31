@@ -381,7 +381,7 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     # in the local development case, the base URL (e.g., localhost:5000...) cannot be used to resolve the tenant id
     # so instead we use the tenant_id claim within the x-tapis-token:
     if 'http://172.17.0.1:' in request.base_url or 'http://localhost:' in request.base_url:
-        logger.warn("found 172.17.0.1 or localhost in flask_baseurl; we are assuming this is local development!!")
+        logger.warn("found 172.17.0.1 or localhost in base_url; we are assuming this is local development!!")
         # some services, such as authenticator, have endpoints that do not receive tokens. in the local development
         # case for these endpoints, we don't have a lot of good options -- we can't use the base URL or the token
         # to determine the tenant, so we just set it to the "dev" tenant.

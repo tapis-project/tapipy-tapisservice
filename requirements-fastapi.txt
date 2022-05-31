@@ -1,0 +1,12 @@
+#FastApi
+fastapi
+uvicorn
+
+#Postgres
+alembic
+psycopg
+
+#Testing
+tapipy
+poetry
+pytest

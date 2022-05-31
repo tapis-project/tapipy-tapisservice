@@ -1,0 +1,1 @@
+Tapipy plugin granting Tapis service functionality using `import tapisservice`.
