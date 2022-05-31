@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.2 - 2022-05-31
+Fixed issue with core_validate_request_token() that was preventing validate_request_token from working for flask services.
+
 ## 1.2.1 - 2022-05-20
 Simplified dependencies, now works with Python 3.10.
 Simplified Dockerfile-tests.
