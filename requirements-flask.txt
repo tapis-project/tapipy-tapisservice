@@ -1,4 +1,6 @@
-flask==1.1.1
+flask==1.1.4
+jinja2<3.1.0
+markupsafe==2.0.1
 Flask-SQLAlchemy==2.4.0
 flask-migrate==2.5.2
 Flask-RESTful==0.3.7
@@ -6,7 +8,6 @@ Flask-RESTful==0.3.7
 # connexion[swagger-ui]
 alembic==1.0.10
 psycopg2==2.8.2
-requests==2.22.0
 gunicorn==19.9.0
 PyYAML
 jsonschema
@@ -15,4 +16,5 @@ openapi-core==0.12.0
 pyjwt
 pycrypto==2.6.1
 cryptography
-tapipy
+tapipy==1.2.2
+tapisservice==1.2.3

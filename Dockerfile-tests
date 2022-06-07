@@ -19,7 +19,7 @@ ADD tests/config-dev-develop.json /home/tapis/config.json
 
 # Add tapisservice files and build with Poetry build.
 ADD . /home/tapis/tapisservice-install-dir
-RUN pip install -r /home/tapis/tapisservice-install-dir/requirements-fastapi.txt
+RUN pip install -r /home/tapis/tapisservice-install-dir/requirements-test.txt
 WORKDIR /home/tapis/tapisservice-install-dir
 RUN poetry build
 WORKDIR /home/tapis/tapisservice-install-dir/dist
