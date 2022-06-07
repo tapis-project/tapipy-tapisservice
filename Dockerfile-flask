@@ -8,10 +8,9 @@ ADD requirements-flask.txt /home/tapis/tapisservice-requirements.txt
 # TODO -- eventually remove this
 RUN apt-get update && apt-get install -y vim
 
-# Install requirements and tapipy/tapisservice packages.
+# Install requirements and tapipy/tapisservice(inside of requirements.txt) packages.
 RUN pip install -U --no-cache-dir pip && \
-    pip install --no-cache-dir -r /home/tapis/tapisservice-requirements.txt \
-    pip install tapipy tapisservice
+    pip install --no-cache-dir -r /home/tapis/tapisservice-requirements.txt
 
 # Set flask defaults and envs.
 # set default worker class, workers, and threads for gunicorn
