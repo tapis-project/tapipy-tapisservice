@@ -244,7 +244,7 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
     # service tokens are stored by admin tenant, so we need to get the admin tenant for the
     # owning site of the tenant.
-    for tn in operation.tapis_client.tenant_cache.tenants:
+    for tn in operation.tapis_client.tenant_cache.tenants.values(): # tenant_cache is a dict
         if tn.site.site_id == site_id:
             request_site_admin_tenant_id = tn.site.site_admin_tenant_id
     logger.debug(f"site admin tenant for the request: {request_site_admin_tenant_id}")

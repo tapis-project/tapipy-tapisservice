@@ -33,6 +33,7 @@ class TenantCache(object):
         """
         Retrieve the set of tenants and associated data that this service instance is serving requests for.
         :return:
+        tenants: dict =  {tenant_id1: tenant_obj1, tenant_id2: tenant_obj2, ...}
         """
         logger.debug("top of get_tenants()")
         # if this is the first time we are calling get_tenants, set the service_running_at_primary_site attribute.
@@ -45,6 +46,8 @@ class TenantCache(object):
             self.service_running_at_primary_site = True
             self.last_tenants_cache_update = datetime.datetime.now()
             result = self.get_tenants_for_tenants_api()
+            # Convert to dict {tenant_id: tenant_obj, ...}
+            result = {tn.tenant_id: tn for tn in result}
             return result
         else:
             logger.debug("this is not the tenants service; calling tenants API to get sites and tenants...")
@@ -72,6 +75,8 @@ class TenantCache(object):
                             self.service_running_at_primary_site = True
                     if s.site_id == t.site_id:
                         t.site = s
+            # Convert to dict {tenant_id: tenant_obj, ...}
+            tenants = {tn.tenant_id: tn for tn in tenants}
             return tenants
 
     def get_tenants_for_tenants_api(self):
@@ -135,18 +140,17 @@ class TenantCache(object):
         """
         def find_tenant_from_id():
             logger.debug(f"top of find_tenant_from_id for tenant_id: {tenant_id}")
-            for tenant in self.tenants:
-                try:
-                    if tenant.tenant_id == tenant_id:
-                        logger.debug(f"found tenant {tenant_id}")
-                        return tenant
-                except TypeError as e:
-                    logger.error(f"caught the type error: {e}")
-            logger.info(f"did not find tenant: {tenant_id}. self.tenants: {self.tenants}")
+            # tenants is a dict
+            tenant = self.tenants.get(tenant_id)
+            if tenant:
+                logger.debug(f"found tenant {tenant_id}")
+                return tenant
+            logger.info(f"did not find tenant: {tenant_id}. self.tenants: {self.tenants.keys()}")
             return None
 
         def find_tenant_from_url():
-            for tenant in self.tenants:
+            # tenants is a dict
+            for tenant in self.tenants.values():
                 if tenant.base_url in url:
                     return tenant
                 base_url_at_primary_site = self.get_base_url_for_tenant_primary_site(tenant.tenant_id)
@@ -276,13 +280,13 @@ class TenantCache(object):
         # just pulls out the tenant's that are admin tenant id's for some site.
         logger.debug("top of get_site_admin_tenants_for_service")
         if self.service_running_at_primary_site:
-            admin_tenants = [t.tenant_id for t in self.tenants if t.tenant_id == t.site.site_admin_tenant_id]
+            admin_tenants = [tn.tenant_id for tn in self.tenants.values() if tn.tenant_id == tn.site.site_admin_tenant_id]
         # otherwise, this service is running at an associate site, so it only needs itself and the primary site.
         else:
             admin_tenants = [conf.service_tenant_id]
-            for t in self.tenants:
-                if t.tenant_id == t.site.site_admin_tenant_id and hasattr(t.site, 'primary') and t.site.primary:
-                    admin_tenants.append(t.tenant_id)
+            for tn in self.tenants.values():
+                if tn.tenant_id == tn.site.site_admin_tenant_id and hasattr(tn.site, 'primary') and tn.site.primary:
+                    admin_tenants.append(tn.tenant_id)
         logger.debug(f"site admin tenants for service: {admin_tenants}")
         return admin_tenants
 

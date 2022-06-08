@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.4 - 2022-06-08
+tapisservice now sets tenants as a dictionary of tenant_id: tenant_obj key-pairs to match Tapipy's implementation.
+
 ## 1.2.3 - 2022-06-07
 Tests now rely on a seperate requirements file instead of using fastapi's.
 Flask and Fastapi now rely on PyPi version of tapisservice.
