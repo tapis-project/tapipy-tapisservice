@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.5 - 2022-06-08
+Fix, had lost decode algorithms code and FastAPI g initialization in init.
+
 ## 1.2.4 - 2022-06-08
 tapisservice now sets tenants as a dictionary of tenant_id: tenant_obj key-pairs to match Tapipy's implementation.
 

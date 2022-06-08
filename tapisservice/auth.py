@@ -333,7 +333,7 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     Additionally, sets the request_thread_local.request_tenant_base_url variable in the process. Returns the
     request_tenant_id (string).
     
-    request should be the request object for the incomming request. at a minimum it should have the following:
+    request should be the request object for the incoming request. at a minimum it should have the following:
       * request.headers - the headers of the request, as a dictionary-like object.
       * request.base_url - the base URL for the request which should include the domain (e.g., localhost or dev.tapis.io).
     request_base_url should be the base URL on the request object. for example, in the flask framework, it is the
@@ -462,7 +462,7 @@ def validate_token(token, tenant_cache=tenant_cache):
     if not token:
         raise errors.NoTokenError("No Tapis access token found in the request.")
     try:
-        data = jwt.decode(token, verify=False)
+        data = jwt.decode(token, options={"verify_signature": False}, algorithms=["RS256"])
     except Exception as e:
         logger.debug(f"got exception trying to parse data from the access_token jwt; exception: {e}")
         raise errors.AuthenticationError("Could not parse the Tapis access token.")
@@ -489,7 +489,7 @@ def validate_token(token, tenant_cache=tenant_cache):
     while tries < 2:
         tries = tries + 1
         try:
-            claims = jwt.decode(token, public_key_str)
+            claims = jwt.decode(token, public_key_str, algorithms=["RS256"])
         except Exception as e:
             # if we get an exception decoding it could be that the tenant's public key has changed (i.e., that
             # the public key in out tenant_cache is stale. if we haven't updated the tenant_cache in the last

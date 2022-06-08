@@ -8,4 +8,4 @@ psycopg
 
 #Tapis
 tapipy==1.2.2
-tapisservice==1.2.4
+tapisservice==1.2.5

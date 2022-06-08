@@ -16,9 +16,11 @@ install: build
 	pip3 install dist/*.whl
 
 build-flask: 
+	rm -rf dist
 	docker build -t tapis/flaskbase -f Dockerfile-flask .
 
 build-test:
+	rm -rf dist
 	docker build -t tapis/tapisservice-tests -f Dockerfile-tests .
 
 run-tests:
