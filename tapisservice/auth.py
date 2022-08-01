@@ -1,3 +1,5 @@
+import base64
+import json
 from lib2to3.pgen2 import token
 import re
 from Crypto.PublicKey import RSA
@@ -265,11 +267,17 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
         # The remaining code is to check whether the token has expired and refresh if necessary
         # if the access token doesn't have an expires_in attribute, there isn't much we can do.
         if not hasattr(access_token, "expires_in"):
-            # it is expected that some tokens, including tokens created by and for the Tokens API itself, will be raw
-            # string types
+            #  tokens created by and for the Tokens API itself do not have an expired_in attr; they are
+            #  service.models.TapisAccessToken type
+            try: 
+                if operation.tapis_client.username == 'tokens':
+                    return
+            except:
+                pass
+            # it is expected that some tokens, including will be raw string types or 
             if not type(access_token) == str:
-                logger.warn(f"The access token didn't have an expired_in attr and was not a string type.")
-            logger.debug("returning from preprocess_service_request")
+                logger.warn(f"The access token didn't have an expired_in attr and was not a string type. type was: {type(access_token)}")
+            logger.debug("returning from preprocess_service_request without checking for the need to refresh.")
             return
         # check the time remaining on the access token ---        
         
@@ -285,7 +293,7 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                 else:
                     logger.info("service tokens expired, attempting to refresh service tokens.")
                     access_token = operation.tapis_client.refresh_service_tokens(tenant_id=request_site_admin_tenant_id)
-                    logger.info("service tokens refreshed sucessfully.")
+                    logger.info("service tokens refreshed successfully.")
                     prepared_request.headers['X-Tapis-Token']= access_token.access_token
                     # also remove the basic auth header; we shouldn't send both
                     prepared_request.headers.pop('Authorization', None)
@@ -449,6 +457,31 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
             pass
 
 
+def insecure_decode_jwt_to_claims(token):
+    """
+    Returns the claims associated with a token WITHOUT checking the signature.
+    """
+    # JWT is 3 parts delineated by '.' character
+    parts = token.split('.')
+    # should be three parts
+    if not len(parts) == 3:
+        raise errors.BaseTapisError(f"Invalid JWT format; did not get 3 parts got: {len(parts)}.")
+    # convert part 1 to bytes and add additional padding; see this issue: 
+    # https://stackoverflow.com/questions/2941995/python-ignore-incorrect-padding-error-when-base64-decoding
+    part_bytes = parts[1].encode()
+    part_bytes = part_bytes + b'=='
+    # try to base64 decode the middle part after adding padding; the decode returns `data` as bytes
+    try:
+        data = base64.b64decode(part_bytes)
+    except Exception as e:
+        raise errors.BaseTapisError(f"could not b64 decode the data; exception: {e}")
+    try:
+        claims = json.loads(data)
+    except Exception as e:
+        raise errors.BaseTapisError(f"Could not serialize the bytes data; exception: {e}")
+    return claims
+
+
 def validate_token(token, tenant_cache=tenant_cache):
     """
     Stand-alone function to validate a Tapis token. 
@@ -462,7 +495,7 @@ def validate_token(token, tenant_cache=tenant_cache):
     if not token:
         raise errors.NoTokenError("No Tapis access token found in the request.")
     try:
-        data = jwt.decode(token, verify=False)
+        data = insecure_decode_jwt_to_claims(token)
     except Exception as e:
         logger.debug(f"got exception trying to parse data from the access_token jwt; exception: {e}")
         raise errors.AuthenticationError("Could not parse the Tapis access token.")
@@ -489,7 +522,7 @@ def validate_token(token, tenant_cache=tenant_cache):
     while tries < 2:
         tries = tries + 1
         try:
-            claims = jwt.decode(token, public_key_str)
+            claims = jwt.decode(token, public_key_str, algorithms=['RS256'])
         except Exception as e:
             # if we get an exception decoding it could be that the tenant's public key has changed (i.e., that
             # the public key in out tenant_cache is stale. if we haven't updated the tenant_cache in the last
