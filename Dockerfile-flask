@@ -23,6 +23,9 @@ ENV FLASK_APP service/api.py
 
 WORKDIR /home/tapis
 
+# TODO -- add/remove this line to work with a local install of tapisservice
+# COPY tapisservice /usr/local/lib/python3.7/site-packages/tapisservice
+
 COPY flask_service_entry.sh /home/tapis/entry.sh
 RUN chmod +x /home/tapis/entry.sh
 CMD ["./entry.sh"]
