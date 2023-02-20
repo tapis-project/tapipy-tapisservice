@@ -222,12 +222,12 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
                                                                                                     operation.resource_name)
 
         elif conf.python_framework_type == 'django':
-            msg = """Did not find `_tapis_use_service_home_site` or `_x_tapis_tenant` and `_x_tapis_user` in kwargs; 
+            msg = """Did not find `_tapis_set_x_headers_from_service` or `_x_tapis_tenant` and `_x_tapis_user` in kwargs; 
             Automatic derivation of these properties is currently only supported for APIs written in flask. 
             If your API is written in flask, be sure to set conf.python_framework_type == flask."""
             raise errors.BaseTapisError(msg)
         else:
-            msg = """Did not find `_tapis_use_service_home_site` or `_x_tapis_tenant` and `_x_tapis_user` in kwargs; 
+            msg = """Did not find `_tapis_set_x_headers_from_service` or `_x_tapis_tenant` and `_x_tapis_user` in kwargs; 
             Automatic derivation of these properties is currently only supported for APIs written in flask. 
             If your API is written in flask, be sure to set conf.python_framework_type == flask."""
             raise errors.BaseTapisError(msg)
