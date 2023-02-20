@@ -56,7 +56,7 @@ class TenantCache(object):
             # NOTE: we intentionally create a new Tapis client with *no authentication* so that we can call the Tenants
             # API even _before_ the SK is started up. If we pass a JWT, the Tenants will try to validate it as part of
             # handling our request, and this validation will fail if SK is not available.
-            t = Tapis(base_url=conf.primary_site_admin_tenant_base_url, resource_set='local') # TODO -- remove resource_set='local'
+            t = Tapis(base_url=conf.primary_site_admin_tenant_base_url)
             try:
                 self.last_tenants_cache_update = datetime.datetime.now()
                 tenants = t.tenants.list_tenants()
