@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.6 - 2022-10-28
+Fix, one tenants section was attempting to call Tapis with resource_set=local.
+Adding dev_request_url conf to divert request with said url to dev tenant.
+
 ## 1.2.5 - 2022-06-08
 Fix, had lost decode algorithms code and FastAPI g initialization in init.
 
