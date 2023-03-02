@@ -442,6 +442,10 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
         logger.error(f"request_thread_local missing token_claims! attrs: {dir(request_thread_local)}")
     request_thread_local.token_claims = claims
     request_thread_local.username = claims.get('tapis/username')
+    # We initialize request_username to look at token username. We overwrite this if it's a service account
+    # later by setting the var equal to request_thread_local.x_tapis_user. Services should use this variable
+    # to process request with correct username.
+    request_thread_local.request_username = claims.get('tapis/username')
     request_thread_local.tenant_id = claims.get('tapis/tenant_id')
     request_thread_local.account_type = claims.get('tapis/account_type')
     request_thread_local.delegation = claims.get('tapis/delegation')
@@ -449,6 +453,8 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
     if claims.get('tapis/account_type') == 'service':
         request_thread_local.site_id = claims.get('tapis/target_site_id')
         service_token_checks(request_thread_local, claims, tenant_cache)
+        # Overwrite request_username with x_tapis_user which is set using `_x_tapis_user` headers by service
+        request_thread_local.request_username = request_thread_local.x_tapis_user
     # user tokens must *not* set the X-Tapis-Tenant and X-Tapis_user headers
     else:
         try:
