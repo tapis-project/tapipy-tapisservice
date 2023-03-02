@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.3.0 - 2023-03-01
+`request_thread_local.request_username` is now set. Previously, `request_thread_local.username` was set equal to the token
+claims `username` field, and `request_thread_local.x_tapis_user` was set equal to the `_x_tapis_user` incoming headers
+that service accounts are allowed to set in order to run as other users. This meant that it was up to the services to
+negotiate which username variable to use. `x_tapis_user` in that case gets ignored as only service accounts use it. From
+now on services should make use of `request_username` to get either the regular token username, or if provided, the
+username a service account is making a request on behalf of.
+To note, this is secure. The possible issue would be if we had primary site, A, and associate site, B. There could be a
+scenario where a service from B could try and run as another user on A. This behaviour is forbidden by 
+`tapisservice.auth.service_token_checks()`. This restricts associate sites from cross site service requests. Only the
+primary site is allowed that permission.
+
 ## 1.2.6 - 2022-10-28
 Fix, one tenants section was attempting to call Tapis with resource_set=local.
 Adding dev_request_url conf to divert request with said url to dev tenant.
