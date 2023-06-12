@@ -171,7 +171,7 @@ def preprocess_service_request(operation, prepared_request, **kwargs):
     2. It sets the X-Tapis-Token header to the appropriate service token.
     3. It sets the X-Tapis-Tenant and X-Tapis-User headers.
     """
-    logger.debug(f"top of preprocess_service_request for operation: {operation.http_method.upper()}: {operation.op_desc.path_name}")
+    logger.debug(f"top of preprocess_service_request for operation: {operation.http_method.upper()}: {operation.path_name}")
     # for service requests, we must determine which site to use for the request. there are 3 cases.
     # first, the caller can explicitly set the _tapis_set_x_headers_from_service variable. this instructs the library
     # to use the service's site and name for setting the X-Tapis-Tenant and User headers when making the request.
