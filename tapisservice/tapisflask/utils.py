@@ -5,10 +5,10 @@ import traceback
 from flask import jsonify, request
 from werkzeug.exceptions import ClientDisconnected
 from flask_restful import Api, reqparse
-from openapi_core import create_spec
 import sqlalchemy
 import yaml
 
+from openapi_core import Spec
 from tapisservice.config import conf
 from tapisservice.errors import BaseTapisError
 from tapisservice.logs import get_logger
@@ -18,8 +18,7 @@ TAG = conf.version
 
 spec_path = os.environ.get("TAPIS_API_SPEC_PATH", '/home/tapis/service/resources/openapi_v3.yml')
 try:
-    spec_dict = yaml.safe_load(open(spec_path, 'r'))
-    spec = create_spec(spec_dict)
+    spec = Spec.from_file_path(spec_path)
 except Exception as e:
     msg = f"Could not find/parse API spec file at path: {spec_path}; additional information: {e}"
     print(msg)
@@ -32,6 +31,21 @@ flask_errors_dict = {
         'version': conf.version
     },
 }
+
+### This changes resulting obj from obj = openapi_request_validator.validate(spec, request) to not be frozen.
+### This rewrites DataClassFactory so that when it makes the validated Dataclass it's not frozen.
+from openapi_core.extensions.models.factories import DataClassFactory
+from openapi_core.extensions.models.types import Field
+from typing import Iterable, Type, Any
+from dataclasses import make_dataclass
+def new_create(
+    self,
+    fields: Iterable[Field],
+    name: str = "Model",
+) -> Type[Any]:
+    return make_dataclass(name, fields, frozen=False) #<-- only change is frozen=False
+DataClassFactory.create = new_create
+
 
 class RequestParser(reqparse.RequestParser):
     """Wrap reqparse to raise APIException."""

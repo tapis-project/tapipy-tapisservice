@@ -287,14 +287,11 @@ def test_debug_flag_tenants(client):
 # Tapipy import timing test -
 # -----------------------
 
-# this timing test can fail on slower machines/slower environments, so marking it as a failure for now, but
-# really we should improve this and perhaps make the time to check a function of the environment or something...
-@pytest.mark.xfail
 def test_import_timing():
     start = time.time()
     subprocess.call(['python', '-c', 'from tapipy.tapis import Tapis'])
     import_time = time.time() - start
-    assert import_time <= 3
+    assert import_time <= .3
 
 
 # -----------------------

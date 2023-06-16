@@ -8,14 +8,14 @@ Flask-RESTful==0.3.7
 # connexion[swagger-ui]
 alembic==1.0.10
 psycopg2==2.8.2
+sqlalchemy==1.4.48
 requests
 gunicorn
 PyYAML
 jsonschema
 flask-cors
-openapi-core==0.12.0
 pyjwt
 pycrypto==2.6.1
 cryptography
-tapipy==1.2.2
-tapisservice==1.2.5
+tapipy==1.4.0
+tapisservice==1.4.0
