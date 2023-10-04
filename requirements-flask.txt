@@ -17,5 +17,5 @@ flask-cors
 pyjwt
 pycrypto==2.6.1
 cryptography
-tapipy==1.4.0
+tapipy>=1.4.1
 tapisservice==1.4.0
