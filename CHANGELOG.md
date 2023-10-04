@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.4.1 - 2023-10-04
+Updating tapipy to 1.4.1 from 1.4.0
+
 ## 1.4.0 - 2023-06-12
 TapisService now using `tapipy==1.4.0`. This version overhauls the spec backend previously used for quick imports.
 Spec is now read as a dictionary so small changes were implemented to change from attr notation to dict notation.
