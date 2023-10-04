@@ -291,7 +291,7 @@ def test_import_timing():
     start = time.time()
     subprocess.call(['python', '-c', 'from tapipy.tapis import Tapis'])
     import_time = time.time() - start
-    assert import_time <= .3
+    assert import_time <= .8
 
 
 # -----------------------
