@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.4.1 - 2023-10-04
+Updating tapipy to 1.4.1 from 1.4.0
+
+## 1.4.0 - 2023-06-12
+TapisService now using `tapipy==1.4.0`. This version overhauls the spec backend previously used for quick imports.
+Spec is now read as a dictionary so small changes were implemented to change from attr notation to dict notation.
+Newest openapi-spec library enforces validated object output as frozen, we override that in `utils.py` to keep
+service code working as is.
+We pin `sqlalchemy==1.4.48` as otherwise sqlalchemy attempts to download to 2+ which breaks tapisflask.
+
 ## 1.3.0 - 2023-03-01
 `request_thread_local.request_username` is now set. Previously, `request_thread_local.username` was set equal to the token
 claims `username` field, and `request_thread_local.x_tapis_user` was set equal to the `_x_tapis_user` incoming headers
