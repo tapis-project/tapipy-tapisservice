@@ -71,7 +71,6 @@ class TenantCache(object):
                     if hasattr(s, "primary") and s.primary:
                         self.primary_site = s
                         if s.site_id == conf.service_site_id:
-                            logger.debug(f"this service is running at the primary site: {s.site_id}")
                             self.service_running_at_primary_site = True
                     if s.site_id == t.site_id:
                         t.site = s
