@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.6.0 - 2024-02-05
+Tapipy is now using `tapipy==1.6.0`
+
+## 1.5.0 - 2023-12-05
+Fixed `ERROR: request_thread_local missing token_claims! attrs: ['__class__', .....]` logs. Was not an error.
+Pruned some logs.
+
 ## 1.4.1 - 2023-10-04
 Updating tapipy to 1.4.1 from 1.4.0
 
