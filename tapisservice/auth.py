@@ -390,7 +390,7 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     # cannot be used to resolve the tenant id so instead we use the tenant_id claim within the x-tapis-token:
     dev_request_url = conf.get("dev_request_url", "dev://request_url")
     if 'http://172.17.0.1:' in request.base_url or 'http://localhost:' in request.base_url or dev_request_url in request.base_url:
-        logger.warn(f"found 172.17.0.1, localhost, or {dev_request_url} in base_url; we are assuming this is local development!!")
+        logger.debug(f"found 172.17.0.1, localhost, or {dev_request_url} in base_url")
         # some services, such as authenticator, have endpoints that do not receive tokens. in the local development
         # case for these endpoints, we don't have a lot of good options -- we can't use the base URL or the token
         # to determine the tenant, so we just set it to the "dev" tenant.
@@ -438,8 +438,6 @@ def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
         raise errors.NoTokenError("No access token found in the request.")
     claims = validate_token(request_thread_local.x_tapis_token, tenant_cache)
     # set basic variables on the flask thread-local
-    if not hasattr(request_thread_local, "token_claims"):
-        logger.error(f"request_thread_local missing token_claims! attrs: {dir(request_thread_local)}")
     request_thread_local.token_claims = claims
     request_thread_local.username = claims.get('tapis/username')
     # We initialize request_username to look at token username. We overwrite this if it's a service account
