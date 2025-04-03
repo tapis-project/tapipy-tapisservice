@@ -30,7 +30,7 @@ def authn_and_authz(tenant_cache=tenant_cache, authn_callback=None, authz_callba
     authorization(authz_callback)
 
 
-def authentication(tenant_cache=tenant_cache, authn_callback=None):
+def authentication(tenant_cache=tenant_cache, authn_callback=None, expected_aud=[]):
     """Entry point for authentication. Use as follows:
 
     import auth
@@ -40,10 +40,12 @@ def authentication(tenant_cache=tenant_cache, authn_callback=None):
     def authn_for_my_app():
         auth.authentication()
 
+    expected_aud allows developers to change the expected audience of the token.
+    Tapis doesn't set/care about aud. But OIDC clients like it on tokens.
     """
     core_add_headers(g, request)
     try:
-        core_validate_request_token(g, tenant_cache)
+        core_validate_request_token(g, tenant_cache, expected_aud=expected_aud)
     except errors.NoTokenError as e:
         if authn_callback:
             authn_callback()
@@ -88,10 +90,10 @@ def add_headers():
     return core_add_headers(g, request)
 
 
-def validate_request_token(tenants=tenant_cache):
+def validate_request_token(tenants=tenant_cache, expected_aud=[]):
     """
     Convenience wrapper around the tapisservice.auth.validate_request_token() that passes
     the flask objects.
     """
-    return core_validate_request_token(g, tenant_cache=tenants)
+    return core_validate_request_token(g, tenant_cache=tenants, expected_aud=expected_aud)
 

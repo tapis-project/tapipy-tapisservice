@@ -72,12 +72,12 @@ def authn_and_authz(request, tenant_cache=tenant_cache, authn_callback=None, aut
     authorization(request, authz_callback)
 
 
-def authentication(request, tenant_cache=tenant_cache, authn_callback=None):
+def authentication(request, tenant_cache=tenant_cache, authn_callback=None, expected_aud=[]):
     """Entry point for authentication.
     """
     core_add_headers(g, request)
     try:
-        core_validate_request_token(g, tenant_cache)
+        core_validate_request_token(g, tenant_cache, expected_aud=expected_aud)
     except errors.NoTokenError as e:
         if authn_callback:
             authn_callback(request)

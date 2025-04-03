@@ -424,19 +424,20 @@ def resolve_tenant_id_for_request(request_thread_local, request, tenant_cache=te
     return request_thread_local.request_tenant_id
 
 
-def validate_request_token(request_thread_local, tenant_cache=tenant_cache):
+def validate_request_token(request_thread_local, tenant_cache=tenant_cache, expected_aud=[]):
     """
     Attempts to validate the Tapis access token in the request based on the public key and signature in the JWT.
     This function raises
         - NoTokenError - if no token is present in the request.
         - AuthenticationError - if validation is not successful.
     :param tenants: The service's tenants object.
+    :param expected_aud: allows developers to change the expected audience of the token.
     :return:
     """
     logger.debug(f"top of validate_request_token; thread_local attrs: {dir(request_thread_local)}")
     if not hasattr(request_thread_local, 'x_tapis_token'):
         raise errors.NoTokenError("No access token found in the request.")
-    claims = validate_token(request_thread_local.x_tapis_token, tenant_cache)
+    claims = validate_token(request_thread_local.x_tapis_token, tenant_cache, expected_aud)
     # set basic variables on the flask thread-local
     request_thread_local.token_claims = claims
     request_thread_local.username = claims.get('tapis/username')
@@ -487,11 +488,14 @@ def insecure_decode_jwt_to_claims(token):
     return claims
 
 
-def validate_token(token, tenant_cache=tenant_cache):
+def validate_token(token, tenant_cache=tenant_cache, expected_aud=[]):
     """
     Stand-alone function to validate a Tapis token. 
     :param token: The token to validate
     :param tenant_cache: The service's tenant_cache object with tenant configs; Should be an instance of TenantCache.
+    :param expected_aud: allows developers to change the expected audience of the token.
+    Tapis doesn't set/care about aud. But OIDC clients like it on tokens. Meaning OIDC clients might check /oauth2/userinfo/oidc
+    with a token using aud. For this case we need to be able to set what to expect. If none, any aud is rejected. Info in comments
     :return: 
     """
     # first, decode the token data to determine the tenant associated with the token. We are not able to
@@ -527,7 +531,17 @@ def validate_token(token, tenant_cache=tenant_cache):
     while tries < 2:
         tries = tries + 1
         try:
-            claims = jwt.decode(token, public_key_str, algorithms=["RS256"])
+            # expected_aud - https://github.com/jpadilla/pyjwt/blob/master/docs/usage.rst#audience-claim-aud
+            # by default, if oidc token with aud is input, jwt.decode rejects it. if no aud at all, it'll accept
+            # oidc clients generally want aud==client_id. expected_aud allows us to configure validation
+            # by default this implementation rejects all aud, set expected to change that
+            if "*" in expected_aud:
+                claims = jwt.decode(token, public_key_str, algorithms=["RS256"], options={"verify_aud": False})
+            elif expected_aud:
+                claims = jwt.decode(token, public_key_str, algorithms=["RS256"], audience=expected_aud)
+            else:
+                claims = jwt.decode(token, public_key_str, algorithms=["RS256"])
+
         except Exception as e:
             # if we get an exception decoding it could be that the tenant's public key has changed (i.e., that
             # the public key in out tenant_cache is stale. if we haven't updated the tenant_cache in the last

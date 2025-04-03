@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.0 - 2025-03-10
+Added OIDC auth audience configuration for developers
+Tapipy is now using `tapipy==1.8.0`
+
+## 1.7.0 - 2024-10-22
+Tapipy is now using `tapipy==1.7.0`
+
 ## 1.6.0 - 2024-02-05
 Tapipy is now using `tapipy==1.6.0`
 
