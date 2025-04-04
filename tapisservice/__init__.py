@@ -1,4 +1,4 @@
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 
 def on_tapis_client_instantiation(client, **kwargs):
     """

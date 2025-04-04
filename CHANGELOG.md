@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.1 - 2025-04-03
+OIDC option for developer to set aud=ANY
+Tapipy is now using `tapipy==1.8.2`
+
+
 ## 1.8.0 - 2025-03-10
 Added OIDC auth audience configuration for developers
 Tapipy is now using `tapipy==1.8.0`

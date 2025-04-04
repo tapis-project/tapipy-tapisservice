@@ -18,4 +18,4 @@ pyjwt
 pycrypto==2.6.1
 cryptography
 tapipy>=1.8.2
-tapisservice==1.8.0
+tapisservice==1.8.1
