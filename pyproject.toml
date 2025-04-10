@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tapisservice"
-version = "1.8.1"
+version = "1.8.3"
 description = "Python lib for interacting with an instance of the Tapis API Framework's tapisservice plugin."
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]
