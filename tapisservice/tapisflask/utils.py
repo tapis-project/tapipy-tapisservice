@@ -19,6 +19,22 @@ TAG = conf.version
 spec_path = os.environ.get("TAPIS_API_SPEC_PATH", '/home/tapis/service/resources/openapi_v3.yml')
 try:
     spec = Spec.from_file_path(spec_path)
+    ## If service uses `openapi_request_validator.validate` with a request object the validation
+    ## will ensure the request.url is in spec servers stanza. Users can request NO_VALIDATION to
+    ## remove the stanza and thus validation. Or they can set an expected server to use.
+    ## It might be nice to specify the 20+ tenant urls, but I think not validating seems fine for now.
+    ## This object gets created once and is used globally. The pop or update is a global change.
+    tapisservice_spec_expected_server = conf.get("tapisservice_spec_expected_server", None)
+    if tapisservice_spec_expected_server:
+        if tapisservice_spec_expected_server == "NO_VALIDATION":
+            # If the expected servers are empty, remove the servers from the spec
+            # This way there's no validation on the server values. (request must match server during validation)
+            spec.content().pop('servers', None)
+        elif tapisservice_spec_expected_server:
+            ## The validation doesn't currently feel necessary, but leaving the code to implement if you feel like it.
+            #logger.debug(f"incoming request.url: {request.url}")
+            spec.content().update({"servers": [{'url': tapisservice_spec_expected_server, 'description': 'Tapis API Server'}]})
+            #logger.debug(f"utils.spec - after servers changes: {utils.spec.content()}")
 except Exception as e:
     msg = f"Could not find/parse API spec file at path: {spec_path}; additional information: {e}"
     print(msg)

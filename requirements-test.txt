@@ -11,4 +11,4 @@ poetry
 pytest
 
 #Tapis
-tapipy>=1.6.0
+tapipy>=1.8.2

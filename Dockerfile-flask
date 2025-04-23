@@ -1,6 +1,6 @@
 # image: tapis/flaskbase
 # Base image for building Tapis API services in Python/flask
-FROM python:3.7
+FROM python:3.8
 
 RUN useradd tapis -u 4872
 ADD requirements-flask.txt /home/tapis/tapisservice-requirements.txt
@@ -19,7 +19,7 @@ ENV processes=2
 ENV threads=3
 ENV timeoutSeconds=60
 # set the FLASK_APP var to point to the api.py module in the default location
-ENV FLASK_APP service/api.py
+ENV FLASK_APP=service/api.py
 
 WORKDIR /home/tapis
 

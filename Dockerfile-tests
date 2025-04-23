@@ -7,7 +7,7 @@
 #    docker run -it --rm -v $(pwd)/test/resource_examples:/home/tapis/resource_examples tapis/tapisservice-tests bash
 #    docker run -it --network tenants-api_tenants --rm tapis/tapisservice-tests bash
 
-from python:3.7
+FROM python:3.8
 
 # Upgrade pip
 RUN python -m pip install --upgrade pip
