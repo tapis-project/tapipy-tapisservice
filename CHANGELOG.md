@@ -1,6 +1,20 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.2 & 1.8.3 - 2025-04-09
+New config option `tapisservice_spec_expected_server`, allows services that import spec via `tapisservice.tapisflask.utils.spec` to drop or modify the `servers` stanza to match expected values during `openapi_request_validator.validate`. Fixes issues in tokens which only lists local development endpoints in `servers`. Default is no validation. Services should not need to make changes.
+
+## 1.8.1 - 2025-04-03
+OIDC option for developer to set aud=ANY
+Tapipy is now using `tapipy==1.8.2`
+
+## 1.8.0 - 2025-03-10
+Added OIDC auth audience configuration for developers
+Tapipy is now using `tapipy==1.8.0`
+
+## 1.7.0 - 2024-10-22
+Tapipy is now using `tapipy==1.7.0`
+
 ## 1.6.0 - 2024-02-05
 Tapipy is now using `tapipy==1.6.0`
 

@@ -49,6 +49,11 @@
       "description": "Either all logs to one file (combined) or to split files (split). If no log file specified, STDOUT will still be used.",
       "default": "combined"
     },
+    "tapisservice_spec_expected_server": {
+      "type": "string",
+      "description": "The expected server type for the TapisServiceSpec. This is used to determine which server type to use when creating the TapisServiceSpec. NO_VALIDATION or https://*.*.tapis.io are valid options.",
+      "default": "NO_VALIDATION"
+    },
     "primary_site_admin_tenant_base_url": {
       "type": "string",
       "description": "Base URL for the admin tenant of the primary site for this Tapis installation. This URL will be used at service initiailization, for retrieving sites and tenants data."
