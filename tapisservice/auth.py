@@ -24,7 +24,9 @@ def get_service_tapis_client(tenant_id=None,
                              download_latest_specs=False,
                              tenants=None,
                              access_token_ttl=None,
-                             generate_tokens=True):
+                             generate_tokens=True,
+                             debug_prints=False,
+                             spec_dir=None):
     """
     Returns a Tapis client for the service using the service's configuration. If tenant_id is not passed, uses the first
     tenant in the service's tenants configuration.
@@ -51,6 +53,8 @@ def get_service_tapis_client(tenant_id=None,
               jwt=jwt,
               resource_set=resource_set,
               custom_spec_dict=custom_spec_dict,
+              spec_dir=spec_dir,
+              debug_prints=debug_prints,
               download_latest_specs=download_latest_specs,
               tenants=tenants,
               plugins=["tapisservice"],

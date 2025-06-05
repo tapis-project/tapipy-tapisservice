@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.4 - 2025-06-05
+Added `spec_dir` and `debug_prints` to `get_service_tapis_client` so that services can configure those more easily.
+
+
 ## 1.8.2 & 1.8.3 - 2025-04-09
 New config option `tapisservice_spec_expected_server`, allows services that import spec via `tapisservice.tapisflask.utils.spec` to drop or modify the `servers` stanza to match expected values during `openapi_request_validator.validate`. Fixes issues in tokens which only lists local development endpoints in `servers`. Default is no validation. Services should not need to make changes.
 
