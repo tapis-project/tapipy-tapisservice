@@ -1,5 +1,8 @@
 # image: tapis/flaskbase:fastapi
 # Base image for building Tapis API services in Python/flask
+
+## There's no ci for this as it's not used. Pods Service manually pip installs tapipy/tapisservice.
+
 FROM python:3.10
 
 RUN useradd tapis -u 4872
