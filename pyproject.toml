@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tapisservice"
-version = "1.8.4"
+version = "1.9.0"
 description = "Python lib for interacting with an instance of the Tapis API Framework's tapisservice plugin."
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]
@@ -15,7 +15,7 @@ include = ["tapisservice/tapisflask",
 [tool.poetry.dependencies]
 python = "^3.8"
 # Tapipy has the rest of the dependencies
-tapipy = ">=  1.8.2"
+tapipy = ">=  1.9.0"
 # Continued support for pycrypto(dead 2013). import Crypto
 pycryptodome = ">= 3.6.0"
 

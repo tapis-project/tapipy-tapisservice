@@ -1,5 +1,15 @@
+# tapisservice - Tapis V3 Python Service SDK
+[![PyPI version](https://img.shields.io/pypi/v/tapisservice.svg)](https://pypi.org/project/tapisservice/)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tapis-project/tapipy-tapisservice?label=git%20tag&sort=semver)](https://github.com/tapis-project/tapipy-tapisservice/tags)
+[![Flaskbase Docker Image](https://img.shields.io/docker/v/tapis/flaskbase?label=image&sort=semver)](https://hub.docker.com/r/tapis/flaskbase/tags)
+[![docs](https://img.shields.io/badge/docs-grey)](https://tapis.readthedocs.io/en/latest/technical/pythondev.html#tapisservice-user-guide)
+[![live-docs](https://img.shields.io/badge/live--docs-grey)](https://tapis-project.github.io/live-docs/)
+
 Tapipy plugin granting Tapis service functionality using `import tapisservice`.
 
+Tapis python services use tapisservice via pypi or by basing images off of `flaskbase` (`Dockerfile-flask`), an image made from this repo with latest tapipy, tapisservice, and some Flask oriented libraries.
+
+`Dockerfile-fastapi` exists, but is not a pushed image. It is oriented towards Fastapi.
 
 ## Automated Builds with Make and Poetry
 This repository includes a Makefile to automate tasks such as building the images and running tests.

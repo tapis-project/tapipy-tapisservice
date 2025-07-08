@@ -8,5 +8,5 @@ psycopg
 
 #Tapis
 
-tapipy>=1.8.2
-tapisservice>=1.8.3
+tapipy>=1.9.0
+tapisservice>=1.9.0
